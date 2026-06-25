@@ -58,7 +58,7 @@ dart analyze                # análisis estático
 
 ## Estructura del proyecto
 ```
-lib/main.dart               # entry point e inicialización de Supabase
+lib/main.dart               # entry point, tema y go_router (Supabase pendiente)
 lib/screens/                # pantallas (dashboard_screen.dart)
 lib/widgets/                # widgets reutilizables (tarea_list.dart, compra_list.dart, etc.)
 lib/services/               # lógica Supabase (tarea_service.dart, compra_service.dart)
