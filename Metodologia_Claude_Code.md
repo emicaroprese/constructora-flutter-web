@@ -78,7 +78,34 @@ Estas reglas aplican al documento del proyecto (`Proyecto.md`) y a cualquier doc
 - **Opiná desde lo que sabés, y marcá lo que no sabés.** Podés meterte y proponer, pero no te hagas el que la tenés clara cuando estás suponiendo.
 - **Si algo no se entiende o es ambiguo, preguntá antes de actuar.** No supongas lo que Emi quiso decir ni avances sobre una interpretación tuya: si hay duda, una pregunta corta primero. Suponer y después equivocarse cuesta más que preguntar.
 
-## 9. Aprendizajes técnicos (gotchas reutilizables)
+## 9. Resumen de sesión para aprendizaje (RESUMEN.md)
+
+Al cierre de cada sesión donde se construyó algo, Emi puede pedir un `RESUMEN.md`.
+Este archivo se le pasa a Claude chat para que explique lo que se hizo.
+
+**Cómo escribirlo:**
+
+- **Narrativa en orden cronológico**, no temas separados. La pregunta que guía es:
+  *¿cómo cada paso habilitó el siguiente?* No es un glosario de conceptos.
+- Incluir el código real que se escribió — no pseudocódigo ni descripciones genéricas.
+- Después de cada bloque de código, explicar *por qué* se tomó esa decisión
+  (por qué este orden, por qué este patrón, qué hubiera pasado si se hacía diferente).
+- Cerrar con preguntas que inviten a explorar el razonamiento completo,
+  no solo el "qué es X".
+
+**Lo que NO es:**
+- Una lista de definiciones ("¿qué es fromJson?", "¿qué es go_router?")
+- Un resumen de archivos creados
+- Una descripción técnica sin contexto de por qué
+
+**Encabezado estándar del archivo:**
+```
+Para Claude Chat: explicá esto como una historia en orden, mostrando
+cómo cada paso habilitó el siguiente. Emi tiene experiencia básica
+en Flutter. El objetivo es entender el razonamiento, no definiciones aisladas.
+```
+
+## 10. Aprendizajes técnicos (gotchas reutilizables)
 
 > Errores concretos que ya pagamos en horas. Antes de armar o depurar algo, revisar acá primero. Esta sección crece sesión a sesión.
 
