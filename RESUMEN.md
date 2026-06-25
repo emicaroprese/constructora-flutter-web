@@ -1,70 +1,108 @@
-# Resumen de sesión — Scaffold del proyecto
+# Cómo se construyó el scaffold — paso a paso
 
-Este documento es para que Claude Chat explique lo que se hizo.
-Emi tiene experiencia básica en Flutter (apps de hábitos, chat, etc.).
-El objetivo es entender cada decisión, no solo saber que existe.
-
----
-
-## Qué se construyó
-
-El scaffold (estructura base) de una app Flutter Web: una app que compila,
-corre en Chrome, y tiene toda la arquitectura lista para construir encima.
-Todavía no hay datos reales ni conexión a Supabase — eso es la próxima sesión.
+Para Claude Chat: explicá esto como una historia en orden, mostrando
+cómo cada paso habilitó el siguiente. Emi tiene experiencia básica
+en Flutter (apps de hábitos, chat, etc.). El objetivo es entender
+el razonamiento detrás de cada decisión, no definiciones aisladas.
 
 ---
 
-## 1. Estructura de carpetas
+## El punto de partida
 
+La carpeta solo tenía archivos de documentación (.md). Ningún código Flutter.
+Antes de crear nada, había que decidir cómo iba a estar organizado el proyecto.
+
+Se eligió esta estructura:
 ```
-lib/
-  main.dart
-  screens/
-    dashboard_screen.dart
-  widgets/
-    tarea_list.dart
-    compra_list.dart
-  services/
-    tarea_service.dart
-    compra_service.dart
-  models/
-    tarea.dart
-    item_compra.dart
-assets/
-  .env              ← credenciales Supabase (ignorado en git)
+lib/screens/    ← pantallas completas
+lib/widgets/    ← piezas reutilizables de UI
+lib/services/   ← toda la lógica con Supabase
+lib/models/     ← los datos y su forma
 ```
 
-**Preguntas para explorar:**
-- ¿Por qué separar en screens/, widgets/, services/, models/?
-- ¿Qué diferencia hay entre un widget y una screen en Flutter?
-- ¿Por qué la lógica de Supabase va en services/ y no en los widgets?
+Esta separación existe porque si la lógica de Supabase viviera dentro
+de los widgets, cambiar cómo se conecta la base de datos implicaría
+tocar los widgets. Separarlo significa que cada parte tiene una sola
+razón para cambiar.
 
 ---
 
-## 2. Dependencias agregadas
+## Paso 1: flutter create
 
-En `pubspec.yaml` se agregaron tres paquetes:
+```bash
+flutter create --project-name constructora_flutter_web .
+```
 
-- **supabase_flutter** — el SDK oficial de Supabase para Flutter
-- **go_router** — manejo de navegación/rutas de forma declarativa
-- **flutter_dotenv** — para leer variables de un archivo `.env` en runtime
+Esto generó el esqueleto de Flutter: el `pubspec.yaml`, el `main.dart`
+con el contador de ejemplo, la carpeta `web/`, los archivos de
+configuración. El punto es que Flutter ya tiene todo armado para
+correr — nosotros lo vamos a reemplazar parte por parte.
 
-**Preguntas para explorar:**
-- ¿Qué es pubspec.yaml y cómo funciona el sistema de paquetes en Flutter?
-- ¿Por qué go_router en vez del Navigator nativo de Flutter?
-- ¿Qué es flutter_dotenv y por qué no hardcodear las credenciales en el código?
+También se creó `assets/.env` con las credenciales de Supabase vacías
+y se lo agregó al `.gitignore` para que nunca se suba a GitHub.
+
+**Por qué .env y no hardcodear las credenciales:**
+Si las credenciales van en el código y el repo es público,
+cualquiera puede acceder a tu base de datos. El archivo .env
+existe localmente pero git lo ignora.
+
+Se hizo `git init` y el primer commit con todo esto.
 
 ---
 
-## 3. El archivo main.dart
+## Paso 2: agregar las dependencias
 
+Con el esqueleto listo, se agregaron los tres paquetes que la app necesita:
+
+```bash
+flutter pub add supabase_flutter go_router flutter_dotenv
+```
+
+**supabase_flutter** — el SDK que va a permitir hacer queries a Supabase
+desde Flutter. Sin esto, no hay forma de hablar con la base de datos.
+
+**go_router** — manejo de rutas. Flutter tiene su propio sistema de
+navegación (`Navigator`), pero go_router es más declarativo: definís
+las rutas como una lista, no como instrucciones imperativas. Para web
+también maneja las URLs del navegador correctamente.
+
+**flutter_dotenv** — lee el archivo `.env` en runtime y expone las
+variables. Así `dotenv.env['SUPABASE_URL']` devuelve el valor sin
+que esté en el código.
+
+También se declaró el `.env` en `pubspec.yaml` para que Flutter
+lo incluya como asset (como si fuera una imagen o un font):
+```yaml
+flutter:
+  assets:
+    - assets/.env
+```
+
+Sin esta declaración, Flutter no sabe que ese archivo existe
+y no lo puede leer cuando corre.
+
+---
+
+## Paso 3: reescribir main.dart y armar el tema
+
+El `main.dart` que genera Flutter trae el contador de ejemplo.
+Se reemplazó completamente por tres cosas:
+
+**Primero, la inicialización:**
 ```dart
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: 'assets/.env');
   runApp(const App());
 }
+```
+`main()` es async porque necesita cargar el archivo `.env` antes
+de arrancar la app. `WidgetsFlutterBinding.ensureInitialized()`
+es necesario cuando hacés cosas async antes de `runApp` — le dice
+a Flutter que prepare el motor antes de usarlo.
 
+**Segundo, el router:**
+```dart
 final _router = GoRouter(
   routes: [
     GoRoute(
@@ -73,38 +111,63 @@ final _router = GoRouter(
     ),
   ],
 );
-
-class App extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp.router(
-      routerConfig: _router,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.grey,
-          brightness: Brightness.light,
-        ),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-        ),
-        scaffoldBackgroundColor: Colors.grey[50],
-      ),
-    );
-  }
-}
 ```
+Una sola ruta por ahora: la raíz (`/`) muestra `DashboardScreen`.
+Cuando agreguemos más pantallas, se agregan acá.
 
-**Preguntas para explorar:**
-- ¿Por qué main() es async y qué hace WidgetsFlutterBinding.ensureInitialized()?
-- ¿Qué es MaterialApp.router y en qué se diferencia de MaterialApp normal?
-- ¿Cómo funciona ColorScheme.fromSeed? ¿Qué genera a partir de un color?
-- ¿Por qué AppBar transparent con elevation 0?
+**Tercero, el tema:**
+```dart
+theme: ThemeData(
+  colorScheme: ColorScheme.fromSeed(
+    seedColor: Colors.grey,
+    brightness: Brightness.light,
+  ),
+  appBarTheme: const AppBarTheme(
+    backgroundColor: Colors.transparent,
+    elevation: 0,
+  ),
+  scaffoldBackgroundColor: Colors.grey[50],
+),
+```
+El tema se define una sola vez acá y aplica a toda la app.
+`ColorScheme.fromSeed` genera una paleta completa a partir de un
+color base — en este caso gris. Cualquier widget que use
+`Theme.of(context).colorScheme.X` va a heredar estos colores
+sin hardcodearlos en cada widget.
+
+Se creó también `DashboardScreen` como un widget mínimo que
+solo muestra "Dashboard" en el centro — suficiente para que
+la app compile y corra.
 
 ---
 
-## 4. Los modelos (Tarea e ItemCompra)
+## Paso 4: los modelos
 
+Antes de construir la UI, se definió la forma de los datos.
+Esto importa porque la UI va a mostrar tareas y compras —
+necesita saber qué campos tienen.
+
+Se usó TDD: primero se escribió el test que describía cómo
+tenía que funcionar `fromJson`, se corrió para ver que fallaba,
+y después se implementó el modelo.
+
+**El test primero:**
+```dart
+test('fromJson parsea todos los campos correctamente', () {
+  final json = {
+    'id': '1',
+    'titulo': 'Comprar leche',
+    'completada': false,
+    'fecha': '2026-06-25T00:00:00.000Z',
+    'prioridad': 'alta',
+  };
+  final tarea = Tarea.fromJson(json);
+  expect(tarea.titulo, 'Comprar leche');
+  expect(tarea.completada, false);
+});
+```
+
+**Después el modelo:**
 ```dart
 class Tarea {
   final String id;
@@ -114,107 +177,72 @@ class Tarea {
   final DateTime fecha;
   final String prioridad;
 
-  const Tarea({...});
-
   factory Tarea.fromJson(Map<String, dynamic> json) => Tarea(
         id: json['id'] as String,
         titulo: json['titulo'] as String,
         completada: json['completada'] as bool,
         fecha: DateTime.parse(json['fecha'] as String),
-        // ...
+        prioridad: json['prioridad'] as String,
       );
 }
 ```
 
-Se eligió `fromJson` escrito a mano en lugar de usar `json_serializable`
-(que genera código automáticamente).
+`fromJson` recibe el mapa que Supabase va a devolver y lo convierte
+en un objeto `Tarea`. Los campos son `final` porque una tarea no muta
+— si cambia algo, se crea una nueva instancia.
 
-**Preguntas para explorar:**
-- ¿Qué es un factory constructor en Dart y por qué se usa para fromJson?
-- ¿Qué es `Map<String, dynamic>` y de dónde viene ese mapa?
-- ¿Por qué todos los campos son `final`?
-- ¿Cuándo conviene usar json_serializable y cuándo fromJson manual?
+Se eligió escribir `fromJson` a mano en vez de usar `json_serializable`
+(que lo genera automáticamente) porque agrega un paso de compilación
+extra que complica el flujo de aprendizaje. Para este proyecto, manual
+es más claro.
 
 ---
 
-## 5. Los placeholders (widgets y services vacíos)
+## Paso 5: los placeholders
 
-Los widgets (`TareaList`, `CompraList`) devuelven `SizedBox.shrink()` por ahora.
-Los services (`TareaService`, `CompraService`) son clases vacías.
+Con los modelos definidos, se crearon los archivos que van a
+contener la UI y la lógica de Supabase — vacíos por ahora, pero
+en su lugar correcto:
 
 ```dart
+// tarea_list.dart — widget que mostrará la lista de tareas
 class TareaList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return const SizedBox.shrink(); // no muestra nada
+    return const SizedBox.shrink(); // no muestra nada todavía
   }
+}
+
+// tarea_service.dart — lógica de Supabase para tareas
+class TareaService {
+  // queries a Supabase — se implementa en la próxima sesión
 }
 ```
 
-**Preguntas para explorar:**
-- ¿Qué es SizedBox.shrink() y para qué sirve como placeholder?
-- ¿Por qué crear los archivos vacíos ahora y no cuando se necesiten?
+¿Por qué crearlos vacíos ahora? Porque la estructura del proyecto
+queda definida. Cuando en la próxima sesión se implemente
+`TareaService`, ya se sabe exactamente dónde va y cómo se llama.
 
 ---
 
-## 6. Tests con TDD
+## El resultado
 
-Para los modelos se usó TDD (Test-Driven Development):
-primero se escribió el test (que fallaba), después se implementó el modelo.
+Al final de todo esto, la app:
+- Compila sin errores
+- Corre en Chrome con la pantalla "Dashboard"
+- Tiene el tema configurado (gris, AppBar transparente)
+- Tiene los modelos con tests pasando
+- Tiene la arquitectura completa lista para construir encima
 
-```dart
-test('fromJson parsea todos los campos correctamente', () {
-  final json = {'id': '1', 'titulo': 'Comprar leche', ...};
-  final tarea = Tarea.fromJson(json);
-  expect(tarea.titulo, 'Comprar leche');
-});
-```
-
-**Preguntas para explorar:**
-- ¿Qué es TDD y por qué escribir el test que falla primero?
-- ¿Cómo funciona `flutter test` y dónde viven los tests en un proyecto Flutter?
-- ¿Qué testea este test específicamente? ¿Qué NO testea?
+Lo que no tiene todavía: datos reales. Supabase está como
+dependencia instalada pero sin inicializar. Eso es la próxima sesión.
 
 ---
 
-## 7. El archivo .env y gitignore
+## Preguntas que vale la pena explorar con todo esto en contexto
 
-Se creó `assets/.env` con las credenciales de Supabase (vacías por ahora):
-```
-SUPABASE_URL=
-SUPABASE_ANON_KEY=
-```
-
-Este archivo está en `.gitignore` — nunca se sube a GitHub.
-
-**Preguntas para explorar:**
-- ¿Qué riesgo hay si las credenciales van en el código fuente?
-- ¿Cómo lee Flutter un archivo .env en runtime?
-- ¿Cómo se manejan las credenciales cuando se hace deploy?
-
----
-
-## 8. El flujo de commits (git)
-
-Se hicieron 5 commits separados, uno por cada "capa" del scaffold:
-
-```
-dba13c8  chore: scaffold inicial Flutter Web
-33b88bb  chore: agregar dependencias supabase_flutter go_router flutter_dotenv
-0898250  feat: configurar tema, go_router y dashboard placeholder
-747e5fb  feat: agregar modelos Tarea e ItemCompra con fromJson
-a20d6ab  chore: agregar placeholders de services y widgets
-```
-
-**Preguntas para explorar:**
-- ¿Qué convención de nombres de commits se usó y por qué?
-- ¿Por qué hacer commits pequeños en lugar de uno grande al final?
-
----
-
-## Lo que falta (próxima sesión)
-
-1. Crear el proyecto en Supabase y las tablas `tareas` e `items_compra`
-2. Cargar las credenciales en `assets/.env`
-3. Implementar `TareaService` y `CompraService` con las queries a Supabase
-4. Conectar `DashboardScreen` para mostrar los datos reales
+- ¿Por qué el orden importa? (modelos antes que UI, tema antes que widgets)
+- ¿Qué hubiera pasado si poníamos la lógica de Supabase directo en los widgets?
+- ¿Cómo va a fluir el dato desde Supabase hasta aparecer en pantalla?
+  (Supabase → service → widget → UI)
+- ¿Qué es el `context` que aparece en casi todos los widgets?
