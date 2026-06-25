@@ -46,6 +46,7 @@ Emi está aprendiendo Flutter desde cero. El objetivo es que entienda mientras c
 - supabase_flutter — conexión a Supabase
 - go_router — navegación declarativa
 - flutter_dotenv — credenciales desde .env
+- Repo: https://github.com/emicaroprese/constructora-flutter-web
 
 ## Comandos
 ```

@@ -25,11 +25,11 @@ Dashboard personal de uso propio. Muestra dos listas independientes — tareas y
 
 | Dato | Valor |
 | --- | --- |
-| Fase actual | Definición cerrada — listo para scaffolding |
+| Fase actual | Scaffold completo — listo para conectar Supabase |
 | Stack | Flutter Web + Supabase |
 | Deploy | Pendiente |
 | Dominio | Pendiente |
-| Repo | Pendiente de crear |
+| Repo | https://github.com/emicaroprese/constructora-flutter-web |
 
 ---
 
@@ -174,23 +174,24 @@ Las dos listas son completamente independientes entre sí. No hay relación entr
 
 ### Estado actual
 
-Definición del proyecto completada. Listo para pasar a Claude Code y arrancar.
+Scaffold completo. Repo en GitHub. App compila y pasa `dart analyze`. Lista para conectar Supabase.
 
 ### Próximo paso
 
-2. Crear cuenta en Supabase.
-3. Crear el repo en GitHub.
-4. Ejecutar `flutter create` y configurar el proyecto base para web.
-5. Conectar Flutter con Supabase.
+1. Crear cuenta y proyecto en Supabase.
+2. Crear tablas `tareas` e `items_compra` en Supabase.
+3. Cargar las credenciales en `assets/.env`.
+4. Implementar `TareaService` y `CompraService` en `lib/services/`.
+5. Conectar `DashboardScreen` con los servicios.
 
 ### Pendientes / decisiones abiertas
 
-- Definir nombre del repo.
 - Decidir dónde hacer el deploy (Vercel, Firebase Hosting, Netlify — a evaluar cuando llegue el momento).
 
 ### Changelog reciente
 
 - **Sesión 1 (inicio del proyecto):** definición completa. Stack: Flutter Web + Supabase. Una pantalla, dos listas independientes, sin login. Estilo: limpio tipo Apple, solo modo claro. Objetivo principal: aprendizaje.
+- **Sesión 2 (scaffold):** scaffold completo con Flutter 3.44.3. Estructura de carpetas, dependencias (supabase_flutter, go_router, flutter_dotenv), tema gris, go_router, modelos Tarea e ItemCompra con fromJson y tests. Repo creado en GitHub y pusheado.
 
 ---
 
